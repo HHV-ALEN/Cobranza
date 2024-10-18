@@ -1,0 +1,14 @@
+Movimiento de cuenta Cheques
+
+Resumen de cuenta del día 08/10/2024
+Sucursal,912,,Nombre,"ELECTRICA INDUSTRIAL ALEN"
+Cuenta,7502,,Moneda,MXN
+
+Resumen del día
+Saldo inicial,"$ +9,999.49",,Saldo final,"$ +335,285.29"
+Depósitos (1),"$ 325,285.80"
+Retiros (0),"$ 0.00"
+
+Detalle de Movimientos - Depósitos y Retiros
+Fecha,Descripción,Depósitos,Retiros,Saldo
+"08/10/2024","Abono Interbancario Sucursal: 859 Referencia Númerica: 6092307 Referencia Alfanúmerica: TRANSFERENCIA DE FONDOS Autorización: 00613181","325,285.80","-","335,285.29"
