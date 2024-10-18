@@ -1,0 +1,71 @@
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de configuración sensibles
+.env
+*.env
+config.php
+*.config.php
+
+# Directorios de dependencias
+/vendor/
+node_modules/
+
+# Archivos de logs y cachés
+*.log
+*.cache
+*.tmp
+*.temp
+*.bak
+/logs/
+/cache/
+/tmp/
+
+# Archivos de compilación o generados
+/build/
+/dist/
+/public/build/
+/public/dist/
+composer.lock
+package-lock.json
+
+# Ignorar IDEs y editores
+.idea/
+/.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Ignorar archivos de depuración
+*.debug
+*.bak
+
+# Ignorar archivos de sesión y de subida
+/sessions/
+/uploads/
+
+# Ignorar archivos relacionados con compilación de frontend
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignorar archivos minificados y mapas de JavaScript/CSS
+*.min.js
+*.min.css
+*.map
+
+# Archivos de imágenes generados
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Archivos temporales o swap de editores
+*~
+*.swp
+*.swm
+
+# Archivos y carpetas específicos de PHP
+phpunit.xml
+phpunit.xml.dist
+php_errors.log
