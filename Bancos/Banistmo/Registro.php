@@ -1,5 +1,5 @@
 <?php 
-require_once '../../Back/Config/config.php';
+require '../../Back/Config/config.php';
 
 $Banco = $_GET['Banco'];
 
@@ -80,5 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     echo "<br>No se ha enviado el formulario";
 }
+
+// Una vez cumplidas las inserciónes en la base de datos, redirigimos a la tabla de registros del banco:
+header("Location: Listado.php?Banco=$Banco");
 
 ?>

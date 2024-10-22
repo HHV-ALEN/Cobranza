@@ -25,22 +25,22 @@
             <div class="row justify-content-center align-items-center text-center">
                 <div class="col-6 col-sm-4 col-md-3">
                     <a href="Bancos/Banistmo/ProcesarArchivo.php?Banco=Banistmo" class="d-block btn-bank">
-                        <img src="/Back/Logos/banitsmo.png" alt="Banistmo" class="img-fluid btn-bank-img">
+                        <img src="Back/Logos/banitsmo.png" alt="Banistmo" class="img-fluid btn-bank-img">
                     </a>
                 </div>
                 <div class="col-6 col-sm-4 col-md-3">
                     <a href="Front/procesador.php?Banco=Banamex" class="d-block btn-bank">
-                        <img src="/Back/Logos/banamex.png" alt="Banamex" class="img-fluid btn-bank-img">
+                        <img src="Back/Logos/Banamex.png" alt="Banamex" class="img-fluid btn-bank-img">
                     </a>
                 </div>
                 <div class="col-6 col-sm-4 col-md-3">
                     <a href="Front/ListadoDeRegistros.php?Banco=Santander" class="d-block btn-bank">
-                        <img src="/Back/Logos/santander.jpg" alt="Santander" class="img-fluid btn-bank-img">
+                        <img src="Back/Logos/santander.jpg" alt="Santander" class="img-fluid btn-bank-img">
                     </a>
                 </div>
                 <div class="col-6 col-sm-4 col-md-3">
                     <a href="Front/ListadoDeRegistros.php?Banco=BASE" class="d-block btn-bank">
-                        <img src="/Back/Logos/base.png" alt="BASE" class="img-fluid btn-bank-img">
+                        <img src="Back/Logos/base.png" alt="BASE" class="img-fluid btn-bank-img">
                     </a>
                 </div>
             </div>
