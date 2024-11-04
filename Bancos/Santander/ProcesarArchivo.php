@@ -7,74 +7,74 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 use Smalot\PdfParser\Parser;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_FILES['pdf_file']) && $_FILES['pdf_file']['error'] == 0) {
-        $pdfFile = $_FILES['pdf_file']['tmp_name'];
-        $nombreArchivo = $_FILES['pdf_file']['name'];
+if (isset($_FILES['pdf_file']) && $_FILES['pdf_file']['error'] == UPLOAD_ERR_OK) {
+    $fileType = mime_content_type($_FILES['pdf_file']['tmp_name']);
 
-        // Inicializar el parser de PDF
-        $parser = new Parser();
+    if ($fileType == 'text/plain' || $fileType == 'text/csv') {
+        $archivoCSV = $_FILES['pdf_file']['tmp_name'];
 
-        try {
-            // Parsear el archivo PDF
-            $pdf = $parser->parseFile($pdfFile);
+        if (($handle = fopen($archivoCSV, 'r')) !== false) {
+            fgetcsv($handle); // Saltar la primera fila de encabezados
+            $registros = [];
 
-            // Extraer el texto
-            $textoExtraido = $pdf->getText();
+            while (($datos = fgetcsv($handle, 1000, ",")) !== false) {
+                if (count($datos) >= 15) {
+                    $fecha = $datos[1];
 
-            // Procesar el texto para extraer los registros
-            $lineas = explode("\n", $textoExtraido);
+                    // Eliminar caracteres que no sean dígitos
+                    $fecha = preg_replace('/\D/', '', $fecha); // Solo deja los números
 
-            foreach ($lineas as $linea) {
-                //echo $linea . '<br>';
+                    // Intentar formatearla como 'dmy'
+                    $fechaObj = DateTime::createFromFormat('dmY', $fecha);
 
-                // Revisamos si la línea contiene un registro con formato de fecha al inicio
-                if (preg_match('/^\d{4}-\d{2}-\d{2}/', $linea)) {
-                    // Usamos una expresión regular para identificar y capturar las partes relevantes
-                    if (preg_match('/^(\d{4}-\d{2}-\d{2})\s+(.+?)\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})$/', $linea, $matches)) {
-                        // Asignamos las capturas a las variables
-                        $fecha = $matches[1];
-                        $descripcion = $matches[2];
-                        $monto = $matches[3];
-                        $saldo = $matches[4];
-
-                        // Quitamos las comas de los montos y saldos para almacenarlos correctamente como números
-                        $monto = str_replace(',', '', $monto);
-                        $saldo = str_replace(',', '', $saldo);
-
-                        // Guardar el registro con los datos capturados y el nombre del archivo procesado
-                        $registros[] = [
-                            'fecha' => $fecha,
-                            'descripcion' => trim($descripcion),
-                            'monto' => $monto,  // Monto procesado sin comas
-                            'saldo' => $saldo,  // Saldo procesado sin comas
-                            'archivo_procesado' => $nombreArchivo
-                        ];
+                    if ($fechaObj !== false) {
+                        // Si es válida, formatearla a 'Y-m-d'
+                        $fechaFormateada = $fechaObj->format('Y-m-d');
+                    } else {
+                        // Si no es válida, asignar un valor por defecto o manejar el error
+                        $fechaFormateada = 'Fecha no válida';
                     }
-                }
 
-                // Buscar y almacenar saldo inicial y final
-                if (strpos($linea, 'SALDO INICIAL') !== false) {
-                    preg_match('/SALDO INICIAL : ([\d,.]+)/', $linea, $matches);
-                    if (isset($matches[1])) {
-                        $saldoInicial = $matches[1];
-                    }
-                }
-                if (strpos($linea, 'SALDO FINAL') !== false) {
-                    preg_match('/SALDO FINAL : ([\d,.]+)/', $linea, $matches);
-                    if (isset($matches[1])) {
-                        $saldoFinal = $matches[1];
-                    }
+                    // Ahora puedes usar $fechaFormateada
+                    //echo $fechaFormateada;
+                    $descripcion = $datos[4];
+                    $CargoAbono = trim($datos[5]); // Verificar que el valor sea '-' o '+'
+                    $importe = str_replace(['$', ','], '', $datos[6]); // Eliminar símbolos
+                    $saldo = str_replace(['$', ','], '', $datos[7]);
+                    $referencia = $datos[8];
+                    $concepto = $datos[9];
+                    $nombreOrdenante = $datos[14];
+                    $archivo_procesado = $_FILES['pdf_file']['name'];
+                    
+
+                    $registros[] = [
+                        'fecha' => $fecha,
+                        'descripcion' => $descripcion,
+                        'CargoAbono' => $CargoAbono,
+                        'importe' => $importe,
+                        'saldo' => $saldo,
+                        'referencia' => $referencia,
+                        'concepto' => $concepto,
+                        'nombre_ordenante' => $nombreOrdenante,
+                        'archivo_procesado' => $archivo_procesado
+                    ];
                 }
             }
-        } catch (Exception $e) {
-            // Manejar el error si ocurre
-            echo 'Error al procesar el PDF: ' . $e->getMessage();
+
+
+            fclose($handle);
+            //echo "<pre>";
+            //print_r($registros);
+            //echo "</pre>";
+        } else {
+            echo "No se pudo abrir el archivo CSV.";
         }
     } else {
-        echo 'Error: No se pudo subir el archivo o no se seleccionó ninguno.';
+        echo "El archivo debe ser un archivo CSV válido.";
     }
 }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -137,6 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-color: #f0f8ff;
             /* Cambia el color de fondo al pasar el mouse */
         }
+
         /* Estilos del footer */
         footer {
             background-color: #333;
@@ -162,14 +163,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h3 class="card-title text-center mb-4">Procesar archivo de <?php echo $Banco ?></h3>
                         <form action="" method="post" enctype="multipart/form-data">
                             <div class="form-group mb-4">
-                                <label for="pdf_file" class="form-label">Seleccione el archivo a procesar</label>
-                                <input type="file" class="form-control" name="pdf_file" id="pdf_file" required>
+                                <label for="pdf_file" class="form-label">Seleccione el archivo CSV a procesar</label>
+                                <input type="file" class="form-control" name="pdf_file" id="pdf_file" accept=".csv"
+                                    required>
                             </div>
                             <input type="hidden" name="Banco" value="<?php echo $Banco ?>">
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary">Procesar</button>
                             </div>
                         </form>
+
                     </div>
                 </div>
             </div>
@@ -179,7 +182,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card shadow-sm">
                     <div class="card-body text-center">
                         <!-- Mostrar Logo del banco -->
-                        <img src="../../Back/Logos/BANISTMO.PNG" alt="<?php echo $Banco ?>" class="img-fluid mb-4 w-25">
+                        <img src="../../Back/Logos/SANTANDER.PNG" alt="<?php echo $Banco ?>"
+                            class="img-fluid mb-4 w-25">
                         <h3 class="card-title mb-4">Visitar el listado de <?php echo $Banco ?></h3>
                         <a href="Listado.php?Banco=<?php echo $Banco ?>" class="btn btn-outline-primary btn-lg">Ver
                             Listado</a>
@@ -191,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container">
         <hr>
-        <?php if ($Banco == 'Banistmo' && !empty($registros)): ?>
+        <?php if ($Banco == 'Santander' && !empty($registros)): ?>
             <div class="table-container text-center">
                 <h2>Registros Extraídos del PDF</h2>
                 <hr>
@@ -199,7 +203,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <table class="table table-striped table-bordered text-center">
                         <thead class="table-dark">
                             <tr>
-                                <th>Crédito</th>
                                 <th>Fecha</th>
                                 <th>Descripción</th>
                                 <th>Monto</th>
@@ -210,19 +213,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <tbody>
                             <?php foreach ($registros as $key => $registro): ?>
                                 <?php
+                                // Conversión de la fecha
                                 $fechaOriginal = $registro['fecha'];
                                 $fechaObj = DateTime::createFromFormat('dmY', $fechaOriginal);
-                                $fechaFormateada = $fechaObj ? $fechaObj->format('Y-m-d') : $fechaOriginal;
+                                $fechaFormateada = $fechaObj ? $fechaObj->format('Y-m-d') : '';
+
+                                // Formatear los montos de "importe" y "saldo"
+                                $importe = number_format($registro['importe'], 2);
+                                $saldo = number_format($registro['saldo'], 2);
+
+                                // Determinar el color de fondo basado en "CargoAbono"
+                                $rowClass = ($registro['CargoAbono'] == '-') ? 'bg-warning' : 'bg-success';
+                                //$importeFormateado = ($registro['CargoAbono'] == '-') ? '-$' . $importe : '+$' . $importe;
+                                // El importe solo sera formateado a un numero float
+                                $importeFormateado = $importe;
+                                // El saldo solo sera formateado a un numero float, sin el signo de $
+                                $saldo = str_replace('$', '', $saldo);
+                               
+
                                 ?>
-                                <tr>
-                                    <td>
-                                        <input type="checkbox" name="registros_credito[]" value="<?php echo $key; ?>">
-                                    </td>
+                                <tr class="<?php echo $rowClass; ?>">
                                     <td>
                                         <input type="date" name="registros[<?php echo $key; ?>][fecha]"
-                                            value="<?php echo $fechaFormateada; ?>" class="form-control" required>
+                                            value="<?php echo htmlspecialchars($fechaFormateada); ?>" class="form-control"
+                                            required>
                                         <input type="hidden" name="registros[<?php echo $key; ?>][fecha_original]"
-                                            value="<?php echo htmlspecialchars($fechaOriginal); ?>">
+                                            value="<?php echo htmlspecialchars($fechaFormateada); ?>">
                                     </td>
                                     <td>
                                         <textarea name="registros[<?php echo $key; ?>][descripcion]" class="form-control"
@@ -230,34 +246,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </td>
                                     <td>
                                         <input type="text" name="registros[<?php echo $key; ?>][monto]"
-                                            value="<?php echo "$" . htmlspecialchars($registro['monto']); ?>"
-                                            class="form-control" required>
+                                            value="<?php echo htmlspecialchars($importeFormateado); ?>" class="form-control"
+                                            required>
                                     </td>
                                     <td>
                                         <input type="text" name="registros[<?php echo $key; ?>][saldo]"
-                                            value="<?php echo "$" . htmlspecialchars($registro['saldo']); ?>"
-                                            class="form-control" required>
+                                            value="<?php echo htmlspecialchars($saldo); ?>" class="form-control" required>
                                     </td>
                                     <td>
                                         <input type="text" placeholder="Ingresa nombre del cliente..."
                                             name="registros[<?php echo $key; ?>][Cliente]"
-                                            value="<?php echo isset($registro['Cliente']) ? htmlspecialchars($registro['Cliente']) : ''; ?>"
+                                            value="<?php echo isset($registro['nombre_ordenante']) ? htmlspecialchars($registro['nombre_ordenante']) : ''; ?>"
                                             class="form-control" required>
                                     </td>
+                                    
                                 </tr>
+                                <input type="hidden" name="registros[<?php echo $key; ?>][CargoAbono]"
+                                    value="<?php echo htmlspecialchars($registro['CargoAbono']); ?>">
                                 <input type="hidden" name="registros[<?php echo $key; ?>][archivo_procesado]"
                                     value="<?php echo htmlspecialchars($registro['archivo_procesado']); ?>">
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-
                     <button type="submit" class="btn btn-success mt-3">Enviar registros seleccionados</button>
                 </form>
             </div>
         <?php endif; ?>
     </div>
-        <!-- Footer -->
-        <footer>
+    <br>
+    <br>
+    <br>
+    <br>
+    <!-- Footer -->
+    <footer>
         <p>&copy; 2024 ALEN INTELLIGENT</p>
     </footer>
 

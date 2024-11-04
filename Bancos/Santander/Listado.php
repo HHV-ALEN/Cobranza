@@ -29,7 +29,7 @@ require '../../Back/Config/config.php';
             </a>
         </div>
         <div class="col-md-6">
-            <a href="ProcesarArchivo.php?Banco=Banistmo" class="btn btn-success btn-lg">
+            <a href="ProcesarArchivo.php?Banco=Santander" class="btn btn-success btn-lg">
                 <i class="fas fa-arrow-left"></i> Registrar nuevo documento
             </a>
         </div>
@@ -39,7 +39,7 @@ require '../../Back/Config/config.php';
     <div class="container-fluid mt-5">
         <h2 class="mb-4 text-center">Registro de Movimientos</h2>
         <div class="container text-center">
-        <img src="../../Back/Logos/BANISTMO.PNG" alt="<?php echo $Banco ?>" class="img-fluid mb-4 w-25">
+        <img src="../../Back/Logos/SANTANDER.PNG" alt="<?php echo $Banco ?>" class="img-fluid mb-4 w-25">
     </div>
         <table class="table table-bordered table-hover table-responsive-lg table-striped">
             <thead class="thead-dark">
@@ -47,12 +47,11 @@ require '../../Back/Config/config.php';
                     <th>ID</th>
                     <th>Fecha</th>
                     <th>Descripción</th>
-                    <th>Débito</th>
-                    <th>Crédito</th>
+                    <th>Abono</th>
+                    <th>Cargo</th>
                     <th>Saldo</th>
                     <th>Fecha de Registro</th>
                     <th>Registrante</th>
-                    <th>Banco</th>
                     <th>Estado</th>
                     <th>Cliente</th>
                     <th>Acciones</th>
@@ -60,8 +59,8 @@ require '../../Back/Config/config.php';
             </thead>
             <tbody class="text-center">
                 <?php
-                // Consulta para obtener los movimientos de Banistmo
-                $sql = "SELECT * FROM movimientos WHERE Banco = 'Banistmo'";
+                // Consulta para obtener los movimientos de Santander
+                $sql = "SELECT * FROM movimientos_santander";
                 $result = $conn->query($sql);
 
                 if ($result->num_rows > 0) {
@@ -75,28 +74,44 @@ require '../../Back/Config/config.php';
                         } else {
                             echo "<tr class='table-danger'>";
                         }
-                        echo "<td>" . $row['id'] . "</td>";
-                        echo "<td>" . $row['fecha'] . "</td>";
-                        echo "<td>" . $row['descripcion'] . "</td>";
+
+                        echo "<td>" . $row['Id'] . "</td>";
+                        echo "<td>" . $row['Fecha'] . "</td>";
+                        echo "<td>" . $row['Descripcion'] . "</td>";
                         // Formatear los montos a moneda
-                        echo "<td>$" . number_format($row['debito'], 2) . "</td>";
-                        echo "<td>$" . number_format($row['credito'], 2) . "</td>";
-                        echo "<td>$" . number_format($row['saldo'], 2) . "</td>";
+                        /// Si el monto DE Abono y/o Cargo es 0, Que se muestre "N/A"
+                        if ($row['Abono'] == 0) {
+                            $row['Abono'] = "N/A";
+                            echo "<td>" . $row['Abono'] . "</td>";
+                        } else {
+                            echo "<td>$" . number_format($row['Abono'], 2) . "</td>";
+                        }
+
+                        if ($row['Cargo'] == 0) {
+                            $row['Cargo'] = "N/A";
+                            echo "<td>" . $row['Cargo'] . "</td>";
+                        } else {
+                            echo "<td>$" . number_format($row['Cargo'], 2) . "</td>";
+                        }
+
+                        echo "<td>$" . number_format($row['Saldo'], 2) . "</td>";
                         echo "<td>" . $row['Fecha_Registro'] . "</td>";
                         echo "<td>" . $row['Registrante'] . "</td>";
-                        echo "<td>" . $row['Banco'] . "</td>";
                         echo "<td>" . $row['Estado'] . "</td>";
                         echo "<td>" . $row['Cliente'] . "</td>";
                         echo "<td class='text-center'>
-                                <a href='ProcesarPago.php?id=" . $row['id'] . "' class='btn btn-primary'>
+                                <a href='ProcesarPago.php?id=" . $row['Id'] . "' class='btn btn-primary'>
                                     <i class='fas fa-edit'></i> Procesar Pago
                                 </a>
                             </td>";
                         echo "</tr>";
                     }
+                    
+                
                 } else {
                     echo "<tr><td colspan='10' class='text-center'>No hay registros</td></tr>";
                 }
+
                 ?>
             </tbody>
         </table>
