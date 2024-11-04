@@ -24,13 +24,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+
         // Procesamos los registros de crédito
         foreach ($registros_credito as $registro) {
             // Insertamos en la base de datos
             $fecha = $registro['fecha'];
             $descripcion = $registro['descripcion'];
             $monto = $registro['monto'];
+            // Quitar el signo $ y transformar a float
+            $monto = str_replace('$', '', $monto);
+            $monto = (float) $monto;
+            // Quitar el signo $ y transformar a float
             $saldo = $registro['saldo'];
+            $saldo = str_replace('$', '', $saldo);
+            $saldo = (float) $saldo;
+            // Quitar el signo $ y transformar a float
+            $saldo = str_replace('$', '', $saldo);
+            $saldo = (float) $saldo;
+
             $fecha_registro = date('Y-m-d H:i:s');
             $registrante = 'Usuario';
             $archivo_procesado = $registro['archivo_procesado'];
@@ -38,11 +49,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $banco = 'Banistmo';
             $Cliente = $registro['Cliente']; // Cliente del registro
 
+            echo "<br> Registro de crédito: ";
+            echo "<br> Fecha: " . $fecha;
+            echo "<br> Monto: " . $monto;
+            echo "<br> Saldo: " . $saldo;
+            echo "<br>El Monto es tipo: " . gettype($monto);
+            echo "<br>El Saldo es tipo: " . gettype($saldo);
+            echo "<br>";
+
             $sql = "INSERT INTO movimientos (fecha, descripcion, credito, saldo, Fecha_Registro, Registrante, archivo_procesado, Estado, Banco, Cliente)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssddssssss", $fecha, $descripcion, $monto, $saldo, $fecha_registro, $registrante, $archivo_procesado, $estado, $banco, $Cliente);
-
+            
             if (!$stmt->execute()) {
                 // Manejo del error
             }
@@ -54,13 +73,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fecha = $registro['fecha'];
             $descripcion = $registro['descripcion'];
             $monto = $registro['monto'];
+            $monto = str_replace('$', '', $monto);
+            $monto = (float) $monto;
             $saldo = $registro['saldo'];
+            $saldo = str_replace('$', '', $saldo);
+            $saldo = (float) $saldo;
+
             $fecha_registro = date('Y-m-d H:i:s');
             $registrante = 'Usuario';
             $archivo_procesado = $registro['archivo_procesado'];
             $estado = 'Pendiente';
             $banco = 'Banistmo';
             $Cliente = $registro['Cliente']; // Cliente del registro
+
+
+            echo "<br>--------- Registro de Debito: ";
+            echo "<br> Fecha: " . $fecha;
+            echo "<br> Monto: " . $monto;
+            echo "<br> Saldo: " . $saldo;
+            echo "<br>El Monto es tipo: " . gettype($monto);
+            echo "<br>El Saldo es tipo: " . gettype($saldo);
+            echo "<br>--------";
+
 
             $sql = "INSERT INTO movimientos (fecha, descripcion, debito, saldo, Fecha_Registro, Registrante, archivo_procesado, Estado, Banco, Cliente)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -71,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Manejo del error
             }
             $stmt->close();
-        }
+        } 
 
         echo "<br>Se han procesado los registros correctamente";
     } else {
